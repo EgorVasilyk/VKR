@@ -1,0 +1,225 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Цели на {{ current_date|date:"d.m.Y" }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/calendar.css' %}">
+<link rel="stylesheet" href="{% static 'css/day_goals.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="calendar-container">
+    <div class="date-navigation">
+        <a href="/goals/{{ prev_day|date:'Y-m-d' }}/" class="nav-date-button">
+            &lt; {{ prev_day|date:"d.m.Y" }}
+        </a>
+        <div class="current-date">{{ current_date|date:"d.m.Y" }}</div>
+        <a href="/goals/{{ next_day|date:'Y-m-d' }}/" class="nav-date-button">
+            {{ next_day|date:"d.m.Y" }} &gt;
+        </a>
+    </div>
+
+    <div class="goals-list">
+        {% if goals %}
+            <!-- Сначала просроченные -->
+            {% for goal in goals %}
+                {% if not goal.is_deleted and goal.status.name == 'Просрочено' %}
+                <div class="goal-item clickable-goal" onclick="window.location.href='{% url 'goal_edit' goal.id %}'">
+                    <div class="goal-header">
+                        <div class="goal-title">{{ goal.title }}</div>
+                        <div class="goal-status-container">
+                            <div class="goal-status status-overdue">
+                                {{ goal.status.name }}
+                            </div>
+                            <button class="reschedule-btn" onclick="event.stopPropagation(); openRescheduleModal('{{ goal.id }}')">
+                                Перенести
+                            </button>
+                        </div>
+                    </div>
+                    <div class="goal-dates">
+                        {% if goal.start_date and goal.end_date %}
+                            Период: {{ goal.start_date|date:"d.m.Y" }} - {{ goal.end_date|date:"d.m.Y" }}
+                        {% elif goal.deadline %}
+                            Срок: {{ goal.deadline|date:"d.m.Y" }}
+                        {% endif %}
+                    </div>
+                    {% if goal.goalitems_set.all %}
+                    <div class="goal-items">
+                        {% for item in goal.goalitems_set.all %}
+                        <div class="goal-subitem">
+                            - {{ item.title }}
+                            {% if item.deadline %}
+                                (до {{ item.deadline|date:"d.m.Y" }})
+                            {% endif %}
+                            <span class="item-status {% if item.status.name == 'В процессе' %}status-in-progress
+                                {% elif item.status.name == 'Выполнено' %}status-completed
+                                {% elif item.status.name == 'Просрочено' %}status-overdue{% endif %}">
+                                ({{ item.status.name }})
+                            </span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+            {% endfor %}
+
+            <!-- Затем в процессе -->
+            {% for goal in goals %}
+                {% if not goal.is_deleted and goal.status.name == 'В процессе' %}
+                <div class="goal-item clickable-goal" onclick="window.location.href='{% url 'goal_edit' goal.id %}'">
+                    <div class="goal-header">
+                        <div class="goal-title">{{ goal.title }}</div>
+                        <div class="goal-status status-in-progress">
+                            {{ goal.status.name }}
+                        </div>
+                    </div>
+                    <div class="goal-dates">
+                        {% if goal.start_date and goal.end_date %}
+                            Период: {{ goal.start_date|date:"d.m.Y" }} - {{ goal.end_date|date:"d.m.Y" }}
+                        {% elif goal.deadline %}
+                            Срок: {{ goal.deadline|date:"d.m.Y" }}
+                        {% endif %}
+                    </div>
+                    {% if goal.goalitems_set.all %}
+                    <div class="goal-items">
+                        {% for item in goal.goalitems_set.all %}
+                        <div class="goal-subitem">
+                            - {{ item.title }}
+                            {% if item.deadline %}
+                                (до {{ item.deadline|date:"d.m.Y" }})
+                            {% endif %}
+                            <span class="item-status {% if item.status.name == 'В процессе' %}status-in-progress
+                                {% elif item.status.name == 'Выполнено' %}status-completed
+                                {% elif item.status.name == 'Просрочено' %}status-overdue{% endif %}">
+                                ({{ item.status.name }})
+                            </span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+            {% endfor %}
+
+            <!-- Затем выполненные -->
+            {% for goal in goals %}
+                {% if not goal.is_deleted and goal.status.name == 'Выполнено' %}
+                <div class="goal-item clickable-goal" onclick="window.location.href='{% url 'goal_edit' goal.id %}'">
+                    <div class="goal-header">
+                        <div class="goal-title">{{ goal.title }}</div>
+                        <div class="goal-status status-completed">
+                            {{ goal.status.name }}
+                        </div>
+                    </div>
+                    <div class="goal-dates">
+                        {% if goal.start_date and goal.end_date %}
+                            Период: {{ goal.start_date|date:"d.m.Y" }} - {{ goal.end_date|date:"d.m.Y" }}
+                        {% elif goal.deadline %}
+                            Срок: {{ goal.deadline|date:"d.m.Y" }}
+                        {% endif %}
+                    </div>
+                    {% if goal.goalitems_set.all %}
+                    <div class="goal-items">
+                        {% for item in goal.goalitems_set.all %}
+                        <div class="goal-subitem">
+                            - {{ item.title }}
+                            {% if item.deadline %}
+                                (до {{ item.deadline|date:"d.m.Y" }})
+                            {% endif %}
+                            <span class="item-status {% if item.status.name == 'В процессе' %}status-in-progress
+                                {% elif item.status.name == 'Выполнено' %}status-completed
+                                {% elif item.status.name == 'Просрочено' %}status-overdue{% endif %}">
+                                ({{ item.status.name }})
+                            </span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+            {% endfor %}
+        {% else %}
+            <div class="no-goals">
+                <p>Нет целей на эту дату</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Модальное окно переноса -->
+<div id="rescheduleModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal()">&times;</span>
+        <h3>Перенести цель</h3>
+        <form id="rescheduleForm" method="post" action="{% url 'reschedule_goal' %}">
+            {% csrf_token %}
+            <input type="hidden" id="goalIdInput" name="goal_id">
+            <div class="form-group">
+                <label for="newEndDate">Новая дата завершения:</label>
+                <input type="date" id="newEndDate" name="new_end_date" required
+                       min="{% now 'Y-m-d' %}">
+                <small class="form-text">Дата должна быть позже начала цели и в будущем</small>
+            </div>
+            <button type="submit" class="submit-btn">Сохранить</button>
+            <div id="formErrors" class="error-message"></div>
+        </form>
+    </div>
+</div>
+
+<script>
+    // Открытие модального окна
+    function openRescheduleModal(goalId) {
+        document.getElementById('goalIdInput').value = goalId;
+        document.getElementById('rescheduleModal').style.display = 'block';
+    }
+
+    // Закрытие модального окна
+    function closeModal() {
+        document.getElementById('rescheduleModal').style.display = 'none';
+    }
+
+    // Закрытие при клике вне окна
+    window.onclick = function(event) {
+        const modal = document.getElementById('rescheduleModal');
+        if (event.target == modal) {
+            closeModal();
+        }
+    }
+
+    // Обработка формы переноса через AJAX
+    document.getElementById('rescheduleForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const form = e.target;
+        const submitBtn = form.querySelector('button[type="submit"]');
+
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Сохранение...';
+
+        fetch(form.action, {
+            method: 'POST',
+            body: new FormData(form),
+            headers: {
+                'X-CSRFToken': form.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                closeModal();
+                location.reload();
+            } else {
+                document.getElementById('formErrors').textContent = data.message || 'Ошибка при сохранении';
+            }
+        })
+        .catch(error => {
+            document.getElementById('formErrors').textContent = 'Произошла ошибка';
+        })
+        .finally(() => {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Сохранить';
+        });
+    });
+</script>
+{% endblock %}

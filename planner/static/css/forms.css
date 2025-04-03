@@ -1,0 +1,174 @@
+/* forms.css */
+/* Стили для контейнеров форм */
+.form-auth-container {
+    max-width: 500px;
+    margin: 40px auto;
+    padding: 30px;
+    background: var(--white);
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    width: 90%;
+}
+
+.form-auth-title {
+    color: var(--primary-color);
+    margin-bottom: 20px;
+    text-align: center;
+    font-size: 24px;
+}
+
+.form-auth-subtitle {
+    color: var(--primary-color);
+    margin: 25px 0 15px;
+    text-align: center;
+}
+
+.form-auth-footer {
+    margin-top: 20px;
+    text-align: center;
+}
+
+.form-auth-link {
+    color: var(--primary-color);
+    text-decoration: none;
+}
+
+.form-auth-link:hover {
+    text-decoration: underline;
+}
+
+/* Стили для полей форм */
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+}
+
+.form-input, .form-select, .form-textarea {
+    width: 100%;
+    padding: 10px 15px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 16px;
+    transition: border-color 0.3s;
+}
+
+.form-input:focus, .form-select:focus, .form-textarea:focus {
+    border-color: var(--primary-color);
+    outline: none;
+}
+
+.form-textarea {
+    min-height: 100px;
+    resize: vertical;
+}
+
+/* Стили для кнопок в формах */
+.form-actions {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+}
+
+/* Специфичные стили для редактирования целей */
+.goal-form .date-fields {
+    display: flex;
+    gap: 15px;
+}
+
+.goal-form .date-fields .form-group {
+    flex: 1;
+}
+
+.goal-form .goal-items-edit {
+    margin-top: 10px;
+}
+
+.goal-form .goal-item-edit {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    margin-bottom: 8px;
+    background-color: var(--light-gray);
+    border-radius: 5px;
+}
+
+.goal-form .goal-item-link {
+    color: var(--text-color);
+    text-decoration: none;
+    flex-grow: 1;
+}
+
+.goal-form .goal-item-link:hover {
+    color: var(--primary-color);
+}
+
+.goal-form .btn-delete-item {
+    background: none;
+    border: none;
+    color: #ff6b6b;
+    cursor: pointer;
+    font-size: 16px;
+    padding: 0 5px;
+}
+
+.goal-form .btn-add-item {
+    display: inline-block;
+    margin-top: 10px;
+    color: var(--primary-color);
+    text-decoration: none;
+}
+
+.goal-form .btn-add-item:hover {
+    text-decoration: underline;
+}
+
+.goal-form .goal-item-empty {
+    color: #666;
+    font-style: italic;
+    padding: 10px;
+    text-align: center;
+}
+
+/* Стили для сообщений об ошибках */
+.form-error {
+    color: var(--danger-text);
+    font-size: 0.9em;
+    margin-top: 5px;
+}
+
+.form-hint {
+    color: #666;
+    font-size: 0.9em;
+    margin-top: 5px;
+}
+
+.error-message {
+    color: #dc3545;
+    font-size: 0.9em;
+    margin-top: 5px;
+}
+
+.alert-error {
+    color: #dc3545;
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+    padding: 10px;
+    margin-bottom: 15px;
+    border-radius: 4px;
+}
+
+.form-input.error {
+    border-color: #dc3545;
+}
+
+.password-help {
+        font-size: 0.8em;
+        color: #6c757d;
+        margin-top: 5px;
+    }

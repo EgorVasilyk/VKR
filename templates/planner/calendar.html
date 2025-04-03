@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Календарь целей{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/calendar.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="calendar-layout">
+    <!-- Кнопка создания цели -->
+    <div class="calendar-side-panel">
+        <a href="{% url 'goal_edit' %}" class="new-goal-btn">
+            + Новая цель
+        </a>
+    </div>
+
+    <!-- Основной календарь -->
+    <div class="calendar-main">
+        <div class="calendar-container">
+            <div class="calendar-header">
+                <button class="nav-button" id="prev-month">&lt;</button>
+                <div class="month-year" id="month-year">{{ current_month }} {{ current_year }}</div>
+                <button class="nav-button" id="next-month">&gt;</button>
+            </div>
+
+            <div class="calendar-grid">
+                <!-- Дни недели и ячейки календаря остаются без изменений -->
+                <div class="day-header">Пн</div>
+                <div class="day-header">Вт</div>
+                <div class="day-header">Ср</div>
+                <div class="day-header">Чт</div>
+                <div class="day-header">Пт</div>
+                <div class="day-header">Сб</div>
+                <div class="day-header">Вс</div>
+
+                {% for day in calendar_days %}
+                    {% if forloop.counter0|divisibleby:7 and not forloop.first %}
+                        </div><div class="calendar-grid">
+                    {% endif %}
+
+                    <div class="day-cell {% if day.is_today %}today{% endif %} {% if not day.is_current_month %}other-month{% endif %}"
+                         data-date="{{ day.date|date:'Y-m-d' }}">
+                        <div class="day-number">{{ day.day }}</div>
+                        {% if day.goals_count > 0 %}
+                            <div class="goals-count">{{ day.goals_count }}</div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Обработчики кнопок навигации по месяцам
+    document.getElementById('prev-month').addEventListener('click', function() {
+        window.location.href = '?month={{ prev_month|date:"Y-m" }}';
+    });
+
+    document.getElementById('next-month').addEventListener('click', function() {
+        window.location.href = '?month={{ next_month|date:"Y-m" }}';
+    });
+
+    // Обработчики кликов по дням
+    document.querySelectorAll('.day-cell').forEach(function(cell) {
+        cell.addEventListener('click', function() {
+            const date = this.getAttribute('data-date');
+            if (date) {
+                window.location.href = '/goals/' + date + '/';
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% load static %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/home.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="home-container">
+    <!-- Блок фильтрации -->
+    <div class="filter-sidebar">
+        <h3>Фильтр по типам</h3>
+        <form method="get" class="type-filter-form">
+        <input type="hidden" name="type" id="type-filter-input">
+
+        <button type="submit"
+                class="type-filter-btn {% if not selected_type %}active{% endif %}"
+                name="type" value="all">
+            Все
+            <span class="count">({{ goals.count }})</span>
+        </button>
+
+        {% for type in goal_types %}
+        <button type="submit"
+                class="type-filter-btn {% if selected_type == type.type %}active{% endif %}"
+                name="type" value="{{ type.type }}">
+            {{ type.type|default:"Без типа" }}
+            <span class="count">({{ type.count }})</span>
+        </button>
+        {% endfor %}
+    </form>
+    </div>
+
+    <!-- Основной контент -->
+    <div class="goals-main">
+        <div class="goals-container">
+            {% for goal in goals %}
+                {% if not goal.is_deleted %}
+                <div class="goal-card">
+                    <button class="edit-goal" onclick="location.href='{% url 'goal_edit' goal.id %}'">✏️</button>
+                    <div class="goal-title">{{ goal.title }}</div>
+                    <div class="goal-type">{{ goal.type|default:"Без типа" }}</div>
+                    <div class="goal-dates">
+                        <span>{{ goal.start_date|date:"d.m.Y" }}</span>
+                        <span>{{ goal.end_date|date:"d.m.Y" }}</span>
+                    </div>
+                    <div class="goal-items">
+                        {% for item in goal.goalitems_set.all %}
+                        <div class="goal-item">
+                            {{ item.title }}
+                            <span class="item-status
+                                {% if item.status.name == 'В процессе' %}status-in-progress
+                                {% elif item.status.name == 'Выполнено' %}status-completed
+                                {% elif item.status.name == 'Просрочено' %}status-overdue{% endif %}">
+                                ({{ item.status.name }})
+                            </span>
+                        </div>
+                        {% empty %}
+                        <div class="goal-item">Нет пунктов</div>
+                        {% endfor %}
+                    </div>
+                    <div class="goal-status-container">
+                        <div class="goal-status {% if goal.status.name == 'В процессе' %}status-in-progress{% elif goal.status.name == 'Выполнено' %}status-completed{% elif goal.status.name == 'Просрочено' %}status-overdue{% endif %}">
+                            {{ goal.status.name }}
+                        </div>
+                        {% if goal.status.name == 'Просрочено' %}
+                        <button class="reschedule-btn" onclick="openRescheduleModal('{{ goal.id }}')">
+                            Перенести
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+            {% endfor %}
+
+            <div class="goal-card add-goal-card" onclick="location.href='{% url 'goal_edit' %}'">
+                <div class="add-goal-icon">+</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+    <!-- Модальное окно переноса -->
+<div id="rescheduleModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal()">&times;</span>
+        <h3>Перенести цель</h3>
+        <form id="rescheduleForm" method="post" action="{% url 'reschedule_goal' %}">
+            {% csrf_token %}
+            <input type="hidden" id="goalIdInput" name="goal_id">
+            <div class="form-group">
+                <label for="newEndDate">Новая дата завершения:</label>
+                <input type="date" id="newEndDate" name="new_end_date" required
+                       min="{% now 'Y-m-d' %}">
+                <small class="form-text">Дата должна быть позже начала цели и в будущем</small>
+            </div>
+            <button type="submit" class="submit-btn">Сохранить</button>
+            <div id="formErrors" class="error-message" style="color: red; margin-top: 10px;"></div>
+        </form>
+    </div>
+</div>
+
+<script>
+    // Открытие модального окна
+    function openRescheduleModal(goalId) {
+        document.getElementById('goalIdInput').value = goalId;
+        document.getElementById('rescheduleModal').style.display = 'block';
+    }
+
+    // Закрытие модального окна
+    function closeModal() {
+        document.getElementById('rescheduleModal').style.display = 'none';
+    }
+
+    // Закрытие при клике вне окна
+    window.onclick = function(event) {
+        const modal = document.getElementById('rescheduleModal');
+        if (event.target == modal) {
+            closeModal();
+        }
+    }
+</script>
+
+{% endblock %}

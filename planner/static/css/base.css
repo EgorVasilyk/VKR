@@ -1,0 +1,273 @@
+/* base.css */
+/* Основные переменные цветов */
+:root {
+  --primary-color: #E082FF;
+  --primary-hover: #D06BFF;
+  --text-color: #333;
+  --light-gray: #f5f5f5;
+  --secondary-color: #f8f0ff;
+  --white: #ffffff;
+  --danger-color: #f8d7da;
+  --danger-text: #721C24;
+  --danger-hover: #f1b0b7;
+  --warning-color: #FFF3CD;
+  --warning-text: #856404;
+  --success-color: #D4EDDA;
+  --success-text: #155724;
+  --warning-hover: #e0a800;
+}
+
+/* Базовые стили */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+  background-color: var(--white);
+  color: var(--text-color);
+  line-height: 1.6;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Шапка */
+.header .user-level {
+  background-color: var(--white);
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  padding: 15px 20px;
+}
+
+.user-level-container {
+    position: relative;
+}
+
+.user-level-container:hover::after {
+    content: attr(title);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #333;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 12px;
+    white-space: nowrap;
+    z-index: 100;
+    margin-bottom: 5px;
+}
+
+.header .user-level {
+    padding: 3px 12px;
+    background-color: var(--primary-color);
+    color: white;
+    border-radius: 15px;
+    font-size: 13px;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.header .header-progress-bar {
+    width: 100px;
+    height: 6px;
+    background-color: var(--light-gray);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.header .header-progress {
+    height: 100%;
+    background-color: var(--primary-color);
+    transition: width 0.5s ease;
+}
+
+.nav {
+  display: flex;
+  gap: 20px;
+  position: relative;
+  padding-bottom: 10px;
+}
+
+.nav-link {
+  color: var(--text-color);
+  text-decoration: none;
+  padding: 5px 10px;
+  transition: color 0.2s;
+}
+
+.nav-link:hover {
+  color: var(--primary-color);
+}
+
+/* Формы */
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.form-input, .form-select, .form-textarea {
+  width: 100%;
+  padding: 10px 15px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  font-size: 16px;
+  transition: border-color 0.3s;
+}
+
+.form-input:focus, .form-select:focus, .form-textarea:focus {
+  border-color: var(--primary-color);
+  outline: none;
+}
+
+.form-textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+/* Кнопки */
+.btn {
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background-color 0.3s;
+}
+
+.btn:hover {
+  background-color: var(--primary-hover);
+}
+
+.btn-cancel {
+  background-color: var(--light-gray);
+  color: var(--text-color);
+}
+
+.btn-cancel:hover {
+  background-color: #e0e0e0;
+}
+
+.btn-delete {
+  background-color: var(--danger-color);
+  color: var(--danger-text);
+}
+
+.btn-delete:hover {
+  background-color: var(--danger-hover);
+}
+
+.messages-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1000;
+    max-width: 400px;
+}
+
+.message {
+    padding: 15px;
+    margin-bottom: 10px;
+    border-radius: 4px;
+    color: white;
+    position: relative;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    animation: slideIn 0.3s ease-out;
+}
+
+.message-success {
+    background-color: #4CAF50;
+}
+
+.message-error {
+    background-color: #f44336;
+}
+
+.message-info {
+    background-color: #2196F3;
+}
+
+.message-warning {
+    background-color: #ff9800;
+}
+
+.close-message {
+    position: absolute;
+    top: 5px;
+    right: 10px;
+    font-size: 20px;
+    font-weight: bold;
+    cursor: pointer;
+    opacity: 0.8;
+}
+
+.close-message:hover {
+    opacity: 1;
+}
+
+.form-text {
+    display: block;
+    margin-top: 5px;
+    font-size: 12px;
+    color: #666;
+}
+
+.error-message {
+    color: var(--danger-color);
+    font-size: 14px;
+    margin-top: 10px;
+}
+
+.submit-btn:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* Адаптивность */
+@media (max-width: 600px) {
+  .auth-container {
+    padding: 20px;
+    margin: 20px;
+  }
+}
+
+@media (max-width: 768px) {
+    .header .user-level-container {
+        position: static;
+        transform: none;
+        order: 1;
+        width: 100%;
+        margin-top: 5px;
+    }
+
+    .nav {
+        flex-wrap: wrap;
+        justify-content: center;
+        padding-bottom: 15px;
+    }
+
+    .header .header-progress-bar {
+        width: 80px;
+    }
+}

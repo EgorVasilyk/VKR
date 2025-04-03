@@ -1,0 +1,111 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+    {% block extra_css %}
+    {% endblock %}
+</head>
+<body>
+    {% block header %}
+        {% include 'header.html' %}
+    {% endblock %}
+
+    <!-- Блок для сообщений -->
+    {% if messages %}
+    <div class="messages-container">
+        {% for message in messages %}
+        <div class="message message-{{ message.tags }}">
+            {{ message }}
+            <span class="close-message" onclick="this.parentElement.style.display='none'">&times;</span>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Добавляем jQuery для AJAX-запросов -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <script>
+        // Обработка формы переноса через AJAX
+        $(document).ready(function() {
+            $('#rescheduleForm').on('submit', function(e) {
+                e.preventDefault();
+                const form = $(this);
+                const submitBtn = form.find('button[type="submit"]');
+
+                submitBtn.prop('disabled', true);
+                submitBtn.text('Сохранение...');
+
+                $.ajax({
+                    type: 'POST',
+                    url: form.attr('action'),
+                    data: form.serialize(),
+                    success: function(response) {
+                        if (response.status === 'success') {
+                            closeModal();
+                            // Показываем сообщение об успехе
+                            showMessage('Цель успешно перенесена', 'success');
+                            setTimeout(() => location.reload(), 1500);
+                        }
+                    },
+                    error: function(xhr) {
+                        let errorMsg = 'Произошла ошибка';
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            errorMsg = xhr.responseJSON.message;
+                        }
+                        showMessage(errorMsg, 'error');
+                        submitBtn.prop('disabled', false);
+                        submitBtn.text('Сохранить');
+                    }
+                });
+            });
+        });
+
+        // Функция показа сообщений
+        function showMessage(text, type) {
+            const messagesContainer = $('.messages-container');
+            const message = $(`
+                <div class="message message-${type}">
+                    ${text}
+                    <span class="close-message">&times;</span>
+                </div>
+            `);
+
+            messagesContainer.append(message);
+            setTimeout(() => message.fadeOut(500, () => message.remove()), 5000);
+
+            message.find('.close-message').click(function() {
+                message.fadeOut(300, () => message.remove());
+            });
+        }
+
+        // Остальные функции остаются без изменений
+        function openRescheduleModal(goalId) {
+            document.getElementById('goalIdInput').value = goalId;
+            document.getElementById('rescheduleModal').style.display = 'block';
+        }
+
+        function closeModal() {
+            document.getElementById('rescheduleModal').style.display = 'none';
+        }
+
+        window.onclick = function(event) {
+            const modal = document.getElementById('rescheduleModal');
+            if (event.target == modal) {
+                closeModal();
+            }
+        }
+    </script>
+
+    {% block extra_js %}
+    {% endblock %}
+</body>
+</html>

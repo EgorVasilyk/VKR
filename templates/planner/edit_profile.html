@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+{% block header %}{% endblock %}
+
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/forms.css' %}">
+
+{% endblock %}
+
+{% block content %}
+<div class="form-auth-container">
+    <h2 class="form-auth-title">Редактирование профиля</h2>
+
+    <form method="post">
+        {% csrf_token %}
+        <div class="form-group">
+            <label>Логин:</label>
+            {{ user_form.username }}
+            {% if user_form.username.errors %}
+                <div class="error-message">{{ user_form.username.errors }}</div>
+            {% endif %}
+        </div>
+        <button type="submit" name="username_submit" class="btn">Сохранить изменения</button>
+    </form>
+
+    <h3 class="form-auth-subtitle">Изменение пароля</h3>
+
+    <form method="post">
+        {% csrf_token %}
+        {% if password_form.non_field_errors %}
+            <div class="alert alert-error">
+                {% for error in password_form.non_field_errors %}
+                    {{ error }}
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <div class="form-group">
+            {{ password_form.old_password.label_tag }}
+            {{ password_form.old_password }}
+            {% if password_form.old_password.errors %}
+                <div class="error-message">{{ password_form.old_password.errors }}</div>
+            {% endif %}
+        </div>
+        <div class="form-group">
+            {{ password_form.new_password1.label_tag }}
+            {{ password_form.new_password1 }}
+            <div class="password-help" id="passwordHelp">
+                Пароль должен содержать:
+                <ul>
+                    <li>Минимум 4 символа</li>
+                    <li>Хотя бы одну цифру</li>
+                    <li>Хотя бы одну букву</li>
+                </ul>
+            </div>
+            {% if password_form.new_password1.errors %}
+                <div class="error-message">{{ password_form.new_password1.errors }}</div>
+            {% endif %}
+        </div>
+        <div class="form-group">
+            {{ password_form.new_password2.label_tag }}
+            {{ password_form.new_password2 }}
+            {% if password_form.new_password2.errors %}
+                <div class="error-message">{{ password_form.new_password2.errors }}</div>
+            {% endif %}
+        </div>
+        <button type="submit" name="password_submit" class="btn">Изменить пароль</button>
+    </form>
+
+    <div class="form-auth-footer">
+        <a href="{% url 'profile' %}" class="form-auth-link">Назад в профиль</a>
+    </div>
+</div>
+{% endblock %}

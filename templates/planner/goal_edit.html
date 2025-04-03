@@ -1,0 +1,164 @@
+{% extends 'base.html' %}
+{% block header %}{% endblock %}
+
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/forms.css' %}">
+{% endblock %}
+
+{% block content %}
+    <main class="form-auth-container">
+        <h2 class="form-auth-title">
+            {% if goal.id %}Редактирование цели{% else %}Новая цель{% endif %}
+        </h2>
+
+        <form method="post" id="goalForm" class="goal-form">
+            {% csrf_token %}
+
+            <div class="form-group">
+                <label for="id_title">Название цели:</label>
+                <input type="text" name="title" id="id_title" class="form-input"
+                       value="{{ form.title.value|default_if_none:'' }}" required>
+            </div>
+
+            <div class="form-group">
+                <label for="id_type">Тип цели:</label>
+                <input type="text" name="type" id="id_type" class="form-input"
+                       value="{{ form.type.value|default_if_none:'' }}">
+            </div>
+
+            <div class="date-fields">
+                <div class="form-group">
+                    <label for="id_start_date">Начало:</label>
+                    <input type="date" name="start_date" id="id_start_date" class="form-input"
+                           value="{{ form.start_date.value|date:'Y-m-d'|default_if_none:'' }}">
+                </div>
+                <div class="form-group">
+                    <label for="id_end_date">Завершение:</label>
+                    <input type="date" name="end_date" id="id_end_date" class="form-input"
+                           value="{{ form.end_date.value|date:'Y-m-d'|default_if_none:'' }}">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Пункты цели:</label>
+                <div class="goal-items-edit">
+                    {% for item in items %}
+                    <div class="goal-item-edit">
+                        <a href="{% url 'goal_item_edit' goal_id=goal.id item_id=item.id %}"
+                           class="goal-item-link">
+                            {{ item.title }} ({{ item.status.name }})
+                        </a>
+                        <button type="button"
+                                class="btn-delete-item"
+                                onclick="if(confirm('Удалить пункт?')) { window.location.href='{% url 'goal_item_delete' goal_id=goal.id item_id=item.id %}' }">
+                            ✕
+                        </button>
+                    </div>
+                    {% empty %}
+                    <div class="goal-item-empty">Нет пунктов</div>
+                    {% endfor %}
+
+                    <a href="{% url 'goal_item_edit' goal_id=goal.id|default:0 %}"
+                       class="btn-add-item">
+                        + Добавить пункт
+                    </a>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="id_status">Статус:</label>
+                <select name="status" id="id_status" class="form-select">
+                    {% for status in statuses %}
+                    <option value="{{ status.id }}" {% if goal.status_id == status.id %}selected{% endif %}>
+                        {{ status.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-actions">
+                <button type="button" onclick="history.back()" class="btn btn-cancel">Отменить</button>
+                <div>
+                    {% if goal.id %}
+                    <button type="button" onclick="confirmDelete({{ goal.id }})" class="btn btn-delete">
+                        Удалить цель
+                    </button>
+                    {% endif %}
+                    <button type="submit" class="btn">Сохранить</button>
+                </div>
+            </div>
+        </form>
+    </main>
+
+    <script>
+        function confirmDelete(goalId) {
+            if (confirm('Вы уверены, что хотите удалить эту цель?')) {
+                fetch(`/goal-delete/${goalId}/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}',
+                        'Content-Type': 'application/json'
+                    }
+                }).then(response => {
+                    if (response.ok) {
+                        window.location.href = "{% url 'home' %}";
+                    }
+                });
+            }
+        }
+
+        // Проверка дат перед отправкой формы
+        document.getElementById('goalForm').addEventListener('submit', function(event) {
+            const startDateInput = document.getElementById('id_start_date');
+            const endDateInput = document.getElementById('id_end_date');
+
+            // Если оба поля заполнены
+            if (startDateInput.value && endDateInput.value) {
+                const startDate = new Date(startDateInput.value);
+                const endDate = new Date(endDateInput.value);
+
+                if (startDate > endDate) {
+                    alert('Дата начала не может быть позже даты завершения!');
+                    event.preventDefault(); // Отменяем отправку формы
+                    return false;
+                }
+            }
+
+            return true;
+        });
+
+        // Дополнительная проверка при изменении дат
+        function checkDates() {
+            const startDateInput = document.getElementById('id_start_date');
+            const endDateInput = document.getElementById('id_end_date');
+            const errorElement = document.getElementById('date-error');
+
+            if (startDateInput.value && endDateInput.value) {
+                const startDate = new Date(startDateInput.value);
+                const endDate = new Date(endDateInput.value);
+
+                if (startDate > endDate) {
+                    if (!errorElement) {
+                        const errorDiv = document.createElement('div');
+                        errorDiv.id = 'date-error';
+                        errorDiv.style.color = 'red';
+                        errorDiv.textContent = 'Дата начала не может быть позже даты завершения!';
+                        endDateInput.insertAdjacentElement('afterend', errorDiv);
+                    }
+                    return false;
+                } else if (errorElement) {
+                    errorElement.remove();
+                }
+            } else if (errorElement) {
+                errorElement.remove();
+            }
+            return true;
+        }
+
+        // Навешиваем обработчики на поля дат
+        document.getElementById('id_start_date').addEventListener('change', checkDates);
+        document.getElementById('id_end_date').addEventListener('change', checkDates);
+    </script>
+{% endblock %}

@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+{% block header %}{% endblock %}
+
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/forms.css' %}">
+{% endblock %}
+
+{% block content %}
+    <div class="form-auth-container">
+        <h2 class="form-auth-title">
+            {% if item.id %}Редактирование{% else %}Добавление{% endif %} пункта цели
+        </h2>
+
+        <form method="post" id="itemForm" class="goal-form">
+            {% csrf_token %}
+
+            <div class="form-group">
+                <label for="id_title">Название:</label>
+                <input type="text" name="title" id="id_title" class="form-input"
+                       value="{{ form.title.value|default_if_none:'' }}" required>
+            </div>
+
+            <div class="form-group">
+                <label for="id_description">Описание:</label>
+                <textarea name="description" id="id_description" class="form-textarea">{{ form.description.value|default_if_none:'' }}</textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="id_deadline">Срок выполнения (оставьте пустым для использования даты завершения цели):</label>
+                <input type="date" name="deadline" id="id_deadline" class="form-input"
+                       value="{{ form.deadline.value|date:'Y-m-d'|default_if_none:'' }}">
+                <div id="date-error" style="color: red; display: none;"></div>
+                <div id="date-hint" style="color: #666; font-size: 0.9em; margin-top: 5px;">
+                    Дата завершения цели: {{ goal.end_date|date:"d.m.Y"|default:"не указана" }}
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="id_status">Статус:</label>
+                <select name="status" id="id_status" class="form-select">
+                    {% for status in statuses %}
+                    <option value="{{ status.id }}" {% if goal.status_id == status.id %}selected{% endif %}>
+                        {{ status.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-actions">
+                <button type="button" onclick="window.history.back()" class="btn btn-cancel">Отменить</button>
+                <button type="submit" class="btn">Сохранить</button>
+                {% if item.id %}
+                <button type="button"
+                        class="btn btn-delete-item"
+                        onclick="if(confirm('Вы уверены, что хотите удалить этот пункт?')) { window.location.href='{% url 'goal_item_delete' goal_id=goal.id item_id=item.id %}' }">
+                    Удалить
+                </button>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('itemForm');
+            const deadlineInput = document.getElementById('id_deadline');
+            const dateError = document.getElementById('date-error');
+
+            // Получаем даты цели из шаблона
+            const goalStartDate = '{{ goal.start_date|date:"Y-m-d" }}' ? new Date('{{ goal.start_date|date:"Y-m-d" }}') : null;
+            const goalEndDate = '{{ goal.end_date|date:"Y-m-d" }}' ? new Date('{{ goal.end_date|date:"Y-m-d" }}') : null;
+
+            function validateDeadline() {
+                // Если дата не указана - валидация успешна (будет использована дата цели)
+                if (!deadlineInput.value) {
+                    dateError.style.display = 'none';
+                    return true;
+                }
+
+                const deadline = new Date(deadlineInput.value);
+
+                if (goalStartDate && deadline < goalStartDate) {
+                    dateError.textContent = 'Дата выполнения не может быть раньше начала цели (' + goalStartDate.toLocaleDateString() + ')';
+                    dateError.style.display = 'block';
+                    return false;
+                }
+
+                if (goalEndDate && deadline > goalEndDate) {
+                    dateError.textContent = 'Дата выполнения не может быть позже завершения цели (' + goalEndDate.toLocaleDateString() + ')';
+                    dateError.style.display = 'block';
+                    return false;
+                }
+
+                dateError.style.display = 'none';
+                return true;
+            }
+
+            // Проверка при изменении даты
+            deadlineInput.addEventListener('change', validateDeadline);
+
+            // Проверка при отправке формы
+            form.addEventListener('submit', function(event) {
+                if (!validateDeadline()) {
+                    event.preventDefault();
+                } else if (!deadlineInput.value && goalEndDate) {
+                    // Если дата не указана и есть дата завершения цели - подставляем её
+                    deadlineInput.value = '{{ goal.end_date|date:"Y-m-d" }}';
+                }
+            });
+        });
+    </script>
+{% endblock %}

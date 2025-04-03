@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+{% block header %}{% endblock %}
+
+{% load static %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/auth.css' %}">
+{% endblock %}
+
+{% block content %}
+    <div class="auth-container">
+        <h2 class="auth-title">Регистрация</h2>
+        <form method="post">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="{{ form.username.id_for_label }}">Логин:</label>
+                {{ form.username }}
+                {% if form.username.errors %}
+                    <div class="error">{{ form.username.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div class="form-group password-field">
+                <label for="{{ form.password1.id_for_label }}">Пароль:</label>
+                <div class="password-input-container">
+                    {{ form.password1 }}
+                    <button type="button" class="toggle-password" aria-label="Показать пароль">
+                        <i class="eye-icon">👁️</i>
+                    </button>
+                </div>
+                <small class="form-text text-muted">
+                    Пароль должен содержать минимум 8 символов, включая цифры и буквы
+                </small>
+                {% if form.password1.errors %}
+                    <div class="error">
+                        {% for error in form.password1.errors %}
+                            <div>{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="form-group password-field">
+                <label for="{{ form.password2.id_for_label }}">Повтор пароля:</label>
+                <div class="password-input-container">
+                    {{ form.password2 }}
+                    <button type="button" class="toggle-password" aria-label="Показать пароль">
+                        <i class="eye-icon">👁️</i>
+                    </button>
+                </div>
+                {% if form.password2.errors %}
+                    <div class="error">{{ form.password2.errors }}</div>
+                {% endif %}
+            </div>
+
+            <button type="submit" class="btn">Зарегистрироваться</button>
+        </form>
+        <div class="auth-footer">
+            <p>Уже есть аккаунт? <a href="{% url 'login' %}" class="auth-link">Войти</a></p>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const toggleButtons = document.querySelectorAll('.toggle-password');
+
+        toggleButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const input = this.previousElementSibling;
+                const icon = this.querySelector('.eye-icon');
+
+                if (input.type === 'password') {
+                    input.type = 'text';
+                    icon.textContent = '👁️';
+                    this.setAttribute('aria-label', 'Скрыть пароль');
+                } else {
+                    input.type = 'password';
+                    icon.textContent = '👁️';
+                    this.setAttribute('aria-label', 'Показать пароль');
+                }
+            });
+        });
+    });
+    </script>
+{% endblock %}

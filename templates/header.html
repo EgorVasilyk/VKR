@@ -1,0 +1,15 @@
+<header class="header">
+    <nav class="nav">
+        <a href="{% url 'calendar' %}" class="nav-link">Календарь</a>
+        <a href="{% url 'home' %}" class="nav-link">Цели</a>
+        <a href="{% url 'profile' %}" class="nav-link">Профиль</a>
+        <div class="user-level-container">
+            <div class="user-level">
+                {{ request.user.get_level_name }}
+            </div>
+            <div class="header-progress-bar">
+                <div class="header-progress" style="width: {{ request.user.progress_percentage }}%"></div>
+            </div>
+        </div>
+    </nav>
+</header>

@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% block header %}{% endblock %}
+
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/forms.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="form-auth-container">
+    <h2 class="form-auth-title">Сброс профиля</h2>
+    <p>Вы уверены, что хотите сбросить свой профиль? Это удалит все ваши цели и сбросит ваш уровень.</p>
+
+    <form method="post">
+        {% csrf_token %}
+        <div class="form-actions">
+            <a href="{% url 'profile' %}" class="btn btn-cancel">Отмена</a>
+            <button type="submit" class="btn btn-danger">Сбросить профиль</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

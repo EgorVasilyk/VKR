@@ -1,0 +1,365 @@
+/* home.css */
+/* Главный контейнер */
+.home-container {
+  display: flex;
+  gap: 30px;
+  padding: 20px;
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* Боковая панель фильтрации */
+.filter-sidebar {
+  width: 250px;
+  flex-shrink: 0;
+  background: var(--white);
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+  height: fit-content;
+  position: sticky;
+  top: 20px;
+}
+
+.filter-sidebar h3 {
+  margin-bottom: 15px;
+  color: var(--primary-color);
+  font-size: 18px;
+}
+
+.type-filter-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.type-filter-btn {
+  background: var(--light-gray);
+  border: none;
+  text-align: left;
+  padding: 10px 15px;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  color: var(--text-color);
+  border-radius: 5px;
+  transition: all 0.2s;
+  font-size: 14px;
+}
+
+.type-filter-btn:hover {
+  background-color: #e9e9e9;
+  color: var(--primary-hover);
+}
+
+.type-filter-btn.active {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.type-filter-btn.active:hover {
+  background-color: var(--primary-hover);
+}
+
+.type-filter-btn .count {
+  color: #666;
+  font-size: 0.85em;
+}
+
+.type-filter-btn.active .count {
+  color: rgba(255,255,255,0.8);
+}
+
+/* Основное содержимое */
+.goals-main {
+  flex-grow: 1;
+  min-width: 0;
+}
+
+.goals-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+  width: 100%;
+}
+
+/* Карточки целей */
+.goal-card {
+  background-color: var(--white);
+  border-radius: 10px;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+  padding: 20px;
+  position: relative;
+  min-height: 180px;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.goal-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+}
+
+.goal-title {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: var(--text-color);
+  padding-right: 30px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.goal-type {
+  color: var(--primary-color);
+  font-size: 14px;
+  margin-bottom: 10px;
+  font-style: italic;
+}
+
+.goal-dates {
+  display: flex;
+  justify-content: space-between;
+  color: #666;
+  font-size: 14px;
+  margin-bottom: 15px;
+  font-family: monospace;
+}
+
+.goal-items {
+  flex-grow: 1;
+  margin-bottom: 15px;
+}
+
+.goal-item {
+  padding: 6px 0;
+  font-size: 15px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  border-bottom: 1px solid var(--light-gray);
+}
+
+.goal-item:last-child {
+  border-bottom: none;
+}
+
+.goal-status {
+  display: inline-block;
+  padding: 5px 10px;
+  border-radius: 15px;
+  font-size: 12px;
+  font-weight: 500;
+  margin-top: 10px;
+}
+
+.edit-goal {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: none;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  color: var(--primary-color);
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background-color 0.3s;
+}
+
+.edit-goal:hover {
+  background-color: var(--light-gray);
+}
+
+/* Карточка добавления новой цели */
+.add-goal-card {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--light-gray);
+  border: 2px dashed var(--primary-color);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s;
+  min-height: 180px;
+}
+
+.add-goal-card:hover {
+  background-color: var(--secondary-color);
+  transform: translateY(-3px);
+  border-color: var(--primary-hover);
+}
+
+.add-goal-icon {
+  font-size: 48px;
+  color: var(--primary-color);
+  transition: all 0.3s;
+}
+
+.add-goal-card:hover .add-goal-icon {
+  transform: scale(1.1);
+  color: var(--primary-hover);
+}
+
+/* Статусы */
+.item-status {
+  font-size: 0.8em;
+  margin-left: 5px;
+  padding: 2px 5px;
+  border-radius: 3px;
+}
+.status-in-progress {
+  background-color: var(--warning-color);
+  color: var(--warning-text);
+}
+.status-completed {
+  background-color: var(--success-color);
+  color: var(--success-text);
+}
+.status-overdue {
+  background-color: var(--danger-color);
+  color: var(--danger-text);
+}
+
+/* Стили для контейнера статуса и кнопки */
+.goal-status-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 10px;
+}
+
+/* Кнопка переноса */
+.reschedule-btn {
+    background-color: var(--warning-color);
+    color: var(--warning-text);
+    border: none;
+    padding: 5px 10px;
+    border-radius: 15px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.reschedule-btn:hover {
+    background-color: var(--warning-hover);
+}
+
+/* Модальное окно */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+}
+
+.modal-content {
+    background-color: var(--white);
+    margin: 15% auto;
+    padding: 20px;
+    border-radius: 10px;
+    width: 90%;
+    max-width: 400px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+}
+
+.modal h3 {
+    margin-top: 0;
+    color: var(--primary-color);
+}
+
+.close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.close:hover {
+    color: var(--danger-color);
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+}
+
+.form-group input[type="date"] {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid var(--light-gray);
+    border-radius: 4px;
+}
+
+.submit-btn {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    width: 100%;
+    font-weight: bold;
+    transition: background-color 0.3s;
+}
+
+.submit-btn:hover {
+    background-color: var(--primary-hover);
+}
+
+/* Адаптивность */
+@media (max-width: 900px) {
+  .goals-container {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .home-container {
+    flex-direction: column;
+  }
+
+  .filter-sidebar {
+    width: 100%;
+    position: static;
+    margin-bottom: 20px;
+  }
+}
+
+@media (max-width: 600px) {
+  .goals-container {
+    grid-template-columns: 1fr;
+  }
+
+  .goal-card {
+    min-height: 160px;
+    padding: 15px;
+  }
+
+  .goal-title {
+    font-size: 16px;
+  }
+
+  .goal-item {
+    font-size: 14px;
+  }
+}
