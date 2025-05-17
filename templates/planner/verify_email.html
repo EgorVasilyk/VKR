@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/auth.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <h2 class="auth-title">Подтверждение email</h2>
+
+    {% if messages %}
+    <div class="messages">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">
+            {{ message }}
+            <span class="close-message">&times;</span>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if not request.user.is_authenticated and not request.session.verify_email %}
+        <div class="alert alert-error">
+            Сессия истекла. Пожалуйста, <a href="{% url 'register' %}">зарегистрируйтесь снова</a>.
+        </div>
+    {% else %}
+        <form method="post">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="code">Код подтверждения:</label>
+                <input type="text" name="code" id="code" class="form-input"
+                       maxlength="4" pattern="\d{4}" required
+                       placeholder="Введите 4 цифры">
+            </div>
+            <button type="submit" class="btn">Подтвердить</button>
+        </form>
+
+        <div class="auth-footer">
+            <form method="post" action="{% url 'resend_verification_code' %}">
+                {% csrf_token %}
+                <button type="submit" class="auth-link">Отправить код повторно</button>
+            </form>
+        </div>
+    {% endif %}
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Закрытие сообщений по клику
+    document.querySelectorAll('.close-message').forEach(btn => {
+        btn.addEventListener('click', function() {
+            this.parentElement.style.display = 'none';
+        });
+    });
+});
+</script>
+{% endblock %}

@@ -1,9 +1,10 @@
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.db import models
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import AbstractUser, Group, Permission
 from django.core.validators import MinValueValidator
 from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
 
 
 class GoalItems(models.Model):
@@ -17,9 +18,10 @@ class GoalItems(models.Model):
     def delete(self, *args, **kwargs):
         self.is_deleted = True
         self.save()
+        self.goal.check_and_update_status()
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'goal_items'
 
 
@@ -64,6 +66,9 @@ class Goals(models.Model):
         # Получаем необходимые статусы один раз
         completed_status = Statuses.objects.filter(name='Выполнено').first()
         overdue_status = Statuses.objects.filter(name='Просрочено').first()
+
+        if self.is_deleted:
+            return
 
         if not completed_status or not overdue_status:
             return
@@ -123,12 +128,17 @@ class Goals(models.Model):
             goal.update_status(overdue_status)
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'goals'
 
     def delete(self, *args, **kwargs):
         self.is_deleted = True
         self.save()
+
+        # Если цель была выполнена - уменьшаем ранг пользователя
+        if self.status and self.status.name == 'Выполнено':
+            self.user.rank = max(0, self.user.rank - 1)
+            self.user.save()
 
 
 @receiver(post_save, sender='planner.GoalItems')
@@ -145,17 +155,27 @@ def update_goal_status_on_item_change(sender, instance, **kwargs):
 
 class Roles(models.Model):
     name = models.CharField(unique=True, max_length=50)
+    is_deleted = models.BooleanField(default=False, verbose_name="Удалено")
+
+    def delete(self, *args, **kwargs):
+        self.is_deleted = True
+        self.save()
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'roles'
 
 
 class Statuses(models.Model):
     name = models.CharField(unique=True, max_length=50)
+    is_deleted = models.BooleanField(default=False, verbose_name="Удалено")
+
+    def delete(self, *args, **kwargs):
+        self.is_deleted = True
+        self.save()
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'statuses'
 
 
@@ -163,9 +183,34 @@ class Users(AbstractUser):
     role = models.ForeignKey('Roles', on_delete=models.CASCADE, related_name='users', default=1)
     password = models.CharField(max_length=128, db_column='password_hash')
     rank = models.IntegerField(default=0, validators=[MinValueValidator(0)])
+    email = models.EmailField(unique=True, verbose_name='email address')
+    is_email_verified = models.BooleanField(default=False)
+    new_email = models.EmailField(blank=True, null=True)
+    is_deleted = models.BooleanField(default=False, verbose_name="Удалено")
+
+    groups = models.ManyToManyField(
+        Group,
+        verbose_name=_('groups'),
+        blank=True,
+        help_text=_('The groups this user belongs to.'),
+        related_name="planner_user_set",
+        related_query_name="planner_user",
+    )
+    user_permissions = models.ManyToManyField(
+        Permission,
+        verbose_name=_('user permissions'),
+        blank=True,
+        help_text=_('Specific permissions for this user.'),
+        related_name="planner_user_set",
+        related_query_name="planner_user",
+    )
+
+    def delete(self, *args, **kwargs):
+        self.is_deleted = True
+        self.save()
 
     def save(self, *args, **kwargs):
-        self.rank = max(1, self.rank)  # Гарантируем, что уровень не меньше 1
+        self.rank = max(0, self.rank)  # Теперь минимальный уровень - 0
         super().save(*args, **kwargs)
 
     @property
@@ -185,3 +230,13 @@ class Users(AbstractUser):
     class Meta:
         managed = True
         db_table = 'users'
+
+
+class EmailVerificationCode(models.Model):
+    user = models.ForeignKey(Users, on_delete=models.CASCADE)
+    code = models.CharField(max_length=4)
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+
+    class Meta:
+        db_table = 'email_verification_codes'

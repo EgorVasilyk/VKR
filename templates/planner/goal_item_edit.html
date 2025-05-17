@@ -41,9 +41,11 @@
                 <label for="id_status">Статус:</label>
                 <select name="status" id="id_status" class="form-select">
                     {% for status in statuses %}
-                    <option value="{{ status.id }}" {% if goal.status_id == status.id %}selected{% endif %}>
-                        {{ status.name }}
-                    </option>
+                        {% if not status.is_deleted %}
+                            <option value="{{ status.id }}" {% if goal.status_id == status.id %}selected{% endif %}>
+                                {{ status.name }}
+                            </option>
+                        {% endif %}
                     {% endfor %}
                 </select>
             </div>

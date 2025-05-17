@@ -45,19 +45,21 @@
                 <label>Пункты цели:</label>
                 <div class="goal-items-edit">
                     {% for item in items %}
-                    <div class="goal-item-edit">
-                        <a href="{% url 'goal_item_edit' goal_id=goal.id item_id=item.id %}"
-                           class="goal-item-link">
-                            {{ item.title }} ({{ item.status.name }})
-                        </a>
-                        <button type="button"
-                                class="btn-delete-item"
-                                onclick="if(confirm('Удалить пункт?')) { window.location.href='{% url 'goal_item_delete' goal_id=goal.id item_id=item.id %}' }">
-                            ✕
-                        </button>
-                    </div>
-                    {% empty %}
-                    <div class="goal-item-empty">Нет пунктов</div>
+                        {% if not item.is_deleted %}
+                            <div class="goal-item-edit">
+                                <a href="{% url 'goal_item_edit' goal_id=goal.id item_id=item.id %}"
+                                   class="goal-item-link">
+                                    {{ item.title }} ({{ item.status.name }})
+                                </a>
+                                <button type="button"
+                                        class="btn-delete-item"
+                                        onclick="if(confirm('Удалить пункт?')) { window.location.href='{% url 'goal_item_delete' goal_id=goal.id item_id=item.id %}' }">
+                                    ✕
+                                </button>
+                            </div>
+                        {% endif %}
+                        {% empty %}
+                            <div class="goal-item-empty">Нет пунктов</div>
                     {% endfor %}
 
                     <a href="{% url 'goal_item_edit' goal_id=goal.id|default:0 %}"
@@ -71,9 +73,11 @@
                 <label for="id_status">Статус:</label>
                 <select name="status" id="id_status" class="form-select">
                     {% for status in statuses %}
-                    <option value="{{ status.id }}" {% if goal.status_id == status.id %}selected{% endif %}>
-                        {{ status.name }}
-                    </option>
+                        {% if not status.is_deleted %}
+                            <option value="{{ status.id }}" {% if goal.status_id == status.id %}selected{% endif %}>
+                                {{ status.name }}
+                            </option>
+                        {% endif %}
                     {% endfor %}
                 </select>
             </div>

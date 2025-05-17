@@ -44,20 +44,20 @@
                             Срок: {{ goal.deadline|date:"d.m.Y" }}
                         {% endif %}
                     </div>
-                    {% if goal.goalitems_set.all %}
+                    {% if goal.active_items %}
                     <div class="goal-items">
-                        {% for item in goal.goalitems_set.all %}
-                        <div class="goal-subitem">
-                            - {{ item.title }}
-                            {% if item.deadline %}
-                                (до {{ item.deadline|date:"d.m.Y" }})
-                            {% endif %}
-                            <span class="item-status {% if item.status.name == 'В процессе' %}status-in-progress
-                                {% elif item.status.name == 'Выполнено' %}status-completed
-                                {% elif item.status.name == 'Просрочено' %}status-overdue{% endif %}">
-                                ({{ item.status.name }})
-                            </span>
-                        </div>
+                        {% for item in goal.active_items %}
+                                <div class="goal-subitem">
+                                    - {{ item.title }}
+                                    {% if item.deadline %}
+                                        (до {{ item.deadline|date:"d.m.Y" }})
+                                    {% endif %}
+                                    <span class="item-status {% if item.status.name == 'В процессе' %}status-in-progress
+                                        {% elif item.status.name == 'Выполнено' %}status-completed
+                                        {% elif item.status.name == 'Просрочено' %}status-overdue{% endif %}">
+                                        ({{ item.status.name }})
+                                    </span>
+                                </div>
                         {% endfor %}
                     </div>
                     {% endif %}
@@ -82,9 +82,9 @@
                             Срок: {{ goal.deadline|date:"d.m.Y" }}
                         {% endif %}
                     </div>
-                    {% if goal.goalitems_set.all %}
+                    {% if goal.active_items %}
                     <div class="goal-items">
-                        {% for item in goal.goalitems_set.all %}
+                        {% for item in goal.active_items %}
                         <div class="goal-subitem">
                             - {{ item.title }}
                             {% if item.deadline %}
@@ -120,9 +120,9 @@
                             Срок: {{ goal.deadline|date:"d.m.Y" }}
                         {% endif %}
                     </div>
-                    {% if goal.goalitems_set.all %}
+                    {% if goal.active_items %}
                     <div class="goal-items">
-                        {% for item in goal.goalitems_set.all %}
+                        {% for item in goal.active_items %}
                         <div class="goal-subitem">
                             - {{ item.title }}
                             {% if item.deadline %}

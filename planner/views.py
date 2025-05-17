@@ -12,22 +12,106 @@ from django.utils import timezone
 from datetime import timedelta, date, datetime
 from calendar import monthrange, HTMLCalendar
 from django.db import models
+from django.core.mail import send_mail
+from django.conf import settings
+from .email_service import send_verification_email
+from smtplib import SMTPAuthenticationError
+import smtplib
+from django.views.decorators.debug import sensitive_variables
 
 
-
+@sensitive_variables('password')
 def register(request):
     if request.method == 'POST':
         form = RegistrationForm(request.POST)
         if form.is_valid():
-            user = form.save(commit=False)
-            role = Roles.objects.get_or_create(name='client')[0]
-            user.role = role
-            user.save()
-            login(request, user)
-            return redirect('calendar')
+            try:
+                user = form.save(commit=False)
+                user.is_active = False
+                user.save()
+
+                try:
+                    send_verification_email(user)
+                    # Сохраняем email в сессии для неавторизованного доступа
+                    request.session['verify_email'] = user.email
+                    return redirect('verify_email')
+                except smtplib.SMTPException as e:
+                    print(f"SMTP error: {e}")
+                    messages.error(request, 'Ошибка отправки email. Пожалуйста, попробуйте позже.')
+                    return render(request, 'planner/register.html', {'form': form})
+
+            except Exception as e:
+                print(f"General error: {e}")
+                messages.error(request, 'Ошибка регистрации')
     else:
         form = RegistrationForm()
     return render(request, 'planner/register.html', {'form': form})
+
+
+def verify_email(request):
+    # Проверяем email в сессии
+    verify_email = request.session.get('verify_email')
+
+    if request.method == 'POST':
+        code = request.POST.get('code')
+        try:
+            # Ищем пользователя по email из сессии или по авторизации
+            if verify_email:
+                user = Users.objects.get(email=verify_email)
+            elif request.user.is_authenticated:
+                user = request.user
+            else:
+                messages.error(request, 'Сессия истекла. Пожалуйста, зарегистрируйтесь снова.')
+                return redirect('register')
+
+            verification = EmailVerificationCode.objects.get(
+                user=user,
+                code=code,
+                expires_at__gte=timezone.now()
+            )
+
+            user.is_email_verified = True
+            user.is_active = True
+            user.save()
+            verification.delete()
+
+            # Очищаем сессию после успешной верификации
+            if 'verify_email' in request.session:
+                del request.session['verify_email']
+
+            login(request, user)
+            return redirect('calendar')
+
+        except (EmailVerificationCode.DoesNotExist, Users.DoesNotExist):
+            messages.error(request, 'Неверный или просроченный код')
+
+    return render(request, 'planner/verify_email.html')
+
+
+def resend_verification_code(request):
+    # Проверяем, есть ли email в сессии (для неавторизованных пользователей)
+    verify_email = request.session.get('verify_email')
+
+    if verify_email:
+        try:
+            user = Users.objects.get(email=verify_email)
+            send_verification_email(user)
+            messages.success(request, 'Новый код подтверждения отправлен на ваш email')
+        except Users.DoesNotExist:
+            messages.error(request, 'Пользователь не найден')
+            return redirect('register')
+        except Exception as e:
+            messages.error(request, f'Ошибка отправки: {str(e)}')
+    elif request.user.is_authenticated and not request.user.is_email_verified:
+        try:
+            send_verification_email(request.user)
+            messages.success(request, 'Новый код подтверждения отправлен на ваш email')
+        except Exception as e:
+            messages.error(request, f'Ошибка отправки: {str(e)}')
+    else:
+        messages.warning(request, 'Ваш email уже подтверждён или сессия истекла')
+
+    return redirect('verify_email')
 
 
 def user_login(request):
@@ -54,13 +138,21 @@ def home(request):
 
     # Основной запрос с фильтрацией
     goals = Goals.objects.filter(user=request.user, is_deleted=False)
+    # Добавляем prefetch_related с фильтром для пунктов целей
+    goals = goals.prefetch_related(
+        models.Prefetch(
+            'goalitems_set',
+            queryset=GoalItems.objects.filter(is_deleted=False),
+            to_attr='active_items'
+        )
+    )
 
     # Применяем фильтрацию
     if selected_type and selected_type != 'all':
         goals = goals.filter(type=selected_type)
 
     # Получаем уникальные типы для фильтра
-    goal_types = Goals.objects.filter(user=request.user) \
+    goal_types = Goals.objects.filter(user=request.user, is_deleted=False) \
         .exclude(type__isnull=True) \
         .exclude(type__exact='') \
         .values('type') \
@@ -102,7 +194,7 @@ def home(request):
 @login_required
 def goal_edit(request, goal_id=None):
     if goal_id:
-        goal = get_object_or_404(Goals, id=goal_id, user=request.user)
+        goal = get_object_or_404(Goals, id=goal_id, user=request.user, is_deleted=False)
         old_status = goal.status.name if goal.status else None
     else:
         goal = Goals(user=request.user)
@@ -126,8 +218,8 @@ def goal_edit(request, goal_id=None):
     else:
         form = GoalForm(instance=goal)
 
-    statuses = Statuses.objects.all()
-    items = goal.goalitems_set.all() if goal.pk else []
+    statuses = Statuses.objects.filter(is_deleted=False)
+    items = goal.goalitems_set.filter(is_deleted=False) if goal.pk else []
 
     return render(request, 'planner/goal_edit.html', {
         'form': form,
@@ -141,10 +233,6 @@ def goal_edit(request, goal_id=None):
 def goal_delete(request, goal_id):
     if request.method == 'POST':
         goal = get_object_or_404(Goals, id=goal_id, user=request.user)
-
-        if goal.status and goal.status.name == 'Выполнено':
-            request.user.rank = max(1, request.user.rank - 1)
-            request.user.save()
         goal.delete()
         return JsonResponse({'status': 'ok'})
     return JsonResponse({'status': 'error'}, status=400)
@@ -171,7 +259,7 @@ def goal_item_edit(request, goal_id, item_id=None):
         form = GoalItemForm(instance=item)
 
     # Получаем все доступные статусы
-    statuses = Statuses.objects.all()
+    statuses = Statuses.objects.filter(is_deleted=False)
 
     return render(request, 'planner/goal_item_edit.html', {
         'form': form,
@@ -183,7 +271,7 @@ def goal_item_edit(request, goal_id, item_id=None):
 
 @login_required
 def goal_item_delete(request, goal_id, item_id):
-    item = get_object_or_404(GoalItems, pk=item_id, goal_id=goal_id)
+    item = get_object_or_404(GoalItems, pk=item_id, goal_id=goal_id, goal__user=request.user)
     item.delete()
     return redirect('goal_edit', goal_id=goal_id)
 
@@ -195,6 +283,8 @@ def profile(request):
 
 @login_required
 def edit_profile(request):
+    email_change_form = EmailChangeForm()
+
     if request.method == 'POST':
         user_form = UserEditForm(request.POST, instance=request.user)
         password_form = PasswordChangeForm(request.user, request.POST)
@@ -209,14 +299,69 @@ def edit_profile(request):
             update_session_auth_hash(request, user)
             messages.success(request, 'Пароль успешно изменен')
             return redirect('profile')
+
+        elif 'email_submit' in request.POST:
+            email_change_form = EmailChangeForm(request.POST)
+            if email_change_form.is_valid():
+                # Сохраняем новый email во временное поле
+                request.user.new_email = email_change_form.cleaned_data['new_email']
+                request.user.save()
+
+                # Отправляем код подтверждения
+                send_verification_email(request.user, is_email_change=True)
+                messages.info(request, 'Код подтверждения отправлен на новый email')
+                return redirect('verify_email_change')
+
     else:
         user_form = UserEditForm(instance=request.user)
         password_form = PasswordChangeForm(request.user)
 
     return render(request, 'planner/edit_profile.html', {
         'user_form': user_form,
-        'password_form': password_form
+        'password_form': password_form,
+        'email_change_form': email_change_form,
     })
+
+
+@login_required
+def verify_email_change(request):
+    if request.method == 'POST':
+        code = request.POST.get('code')
+        try:
+            verification = EmailVerificationCode.objects.get(
+                user=request.user,
+                code=code,
+                expires_at__gte=timezone.now()
+            )
+
+            # Применяем изменение email
+            request.user.email = request.user.new_email
+            request.user.new_email = None
+            request.user.is_email_verified = True
+            request.user.save()
+
+            verification.delete()
+            messages.success(request, 'Email успешно изменен')
+            return redirect('profile')
+
+        except EmailVerificationCode.DoesNotExist:
+            messages.error(request, 'Неверный или просроченный код')
+
+    return render(request, 'planner/verify_email_change.html')
+
+
+@login_required
+def resend_email_change_code(request):
+    if hasattr(request.user, 'new_email') and request.user.new_email:
+        try:
+            send_verification_email(request.user, is_email_change=True)
+            messages.success(request, 'Новый код подтверждения отправлен')
+        except Exception as e:
+            messages.error(request, f'Ошибка отправки: {str(e)}')
+    else:
+        messages.error(request, 'Не указан новый email для подтверждения')
+
+    return redirect('verify_email_change')
 
 
 @login_required
@@ -325,7 +470,13 @@ def day_goals(request, date_str):
         models.Q(deadline=current_date),
         is_deleted=False,  # Фильтрация удалённых
         user=request.user  # Или другая логика доступа
-    ).select_related('status').prefetch_related('goalitems_set')  # Используем правильное имя связи
+    ).prefetch_related(
+        models.Prefetch(
+            'goalitems_set',
+            queryset=GoalItems.objects.filter(is_deleted=False),
+            to_attr='active_items'
+        )
+    ).select_related('status')
 
     context = {
         'current_date': current_date,
@@ -405,3 +556,23 @@ def reschedule_goal(request):
         'status': 'error',
         'message': 'Неверный метод запроса'
     }, status=400)
+
+@login_required
+def notification_settings(request):
+    try:
+        settings = request.user.notification_settings
+    except NotificationSettings.DoesNotExist:
+        settings = NotificationSettings.objects.create(user=request.user)
+
+    if request.method == 'POST':
+        form = NotificationSettingsForm(request.POST, instance=settings)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Настройки уведомлений сохранены')
+            return redirect('notification_settings')
+    else:
+        form = NotificationSettingsForm(instance=settings)
+
+    return render(request, 'planner/notification_settings.html', {
+        'form': form
+    })

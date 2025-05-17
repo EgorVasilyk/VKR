@@ -4,9 +4,14 @@ from .models import *
 
 
 class RegistrationForm(UserCreationForm):
-    # role = forms.ModelChoiceField(queryset=Roles.objects.all())
+    email = forms.EmailField(required=True)
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.fields['email'].widget.attrs.update({
+            'class': 'form-input',
+            'placeholder': 'Введите почту'
+        })
         self.fields['username'].widget.attrs.update({
             'type': 'text',
             'id': 'username',
@@ -32,7 +37,13 @@ class RegistrationForm(UserCreationForm):
 
     class Meta:
         model = Users
-        fields = ['username', 'password1', 'password2']
+        fields = ['username', 'email', 'password1', 'password2']
+
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        if Users.objects.filter(email=email).exists():
+            raise forms.ValidationError("Эта почта уже используется.")
+        return email
 
 
 class LoginForm(AuthenticationForm):
@@ -109,6 +120,19 @@ class CustomPasswordChangeForm(PasswordChangeForm):
             )
 
         return password1
+
+
+class EmailChangeForm(forms.Form):
+    new_email = forms.EmailField(
+        label="Новый email",
+        widget=forms.EmailInput(attrs={'class': 'form-input'})
+    )
+
+    def clean_new_email(self):
+        email = self.cleaned_data.get('new_email')
+        if Users.objects.filter(email=email).exists():
+            raise forms.ValidationError("Этот email уже используется.")
+        return email
 
 
 class GoalForm(forms.ModelForm):

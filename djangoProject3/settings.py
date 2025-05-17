@@ -10,7 +10,23 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 import os
+# import dj_database_url
 from pathlib import Path
+import sys
+
+TESTING = 'test' in sys.argv
+
+if TESTING:
+    # Отключаем миграции для тестов
+    class DisableMigrations:
+        def __contains__(self, app):
+            return True
+
+        def __getitem__(self, app):
+            return None
+
+
+    MIGRATION_MODULES = DisableMigrations()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -77,13 +93,18 @@ WSGI_APPLICATION = 'djangoProject3.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'planner',  # Название вашей базы данных
-        'USER': 'postgres',  # Имя пользователя PostgreSQL
-        'PASSWORD': 'postgres',  # Пароль пользователя
-        'HOST': 'localhost',  # Хост (обычно 'localhost' или '127.0.0.1')
-        'PORT': '5432',  # Порт (по умолчанию 5432 для PostgreSQL)
+        'NAME': 'planner',  # 'goalvoyagerdb',
+        'USER': 'postgres',  # 'goalvoyagerdb_user',
+        'PASSWORD': 'postgres',  # 'ze6KpEyzKkXbE2X5prEhN1Omu0vIZb7V',
+        'HOST': 'localhost',   # 'dpg-d0i8d8t6ubrc73d990e0-a.frankfurt-postgres.render.com',
+        'PORT': '5432',
     }
 }
+
+# DATABASES = {
+#     "default": dj_database_url.parse("postgresql://goalvoyagerdb_user:ze6KpEyzKkXbE2X5prEhN1Omu0vIZb7V@dpg"
+#                                      "-d0i8d8t6ubrc73d990e0-a.frankfurt-postgres.render.com/goalvoyagerdb")
+# }
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
@@ -97,7 +118,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Europe/Moscow'
 
 USE_I18N = True
 
@@ -107,7 +128,8 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
 STATIC_URL = '/static/'
-STATIC_ROOT = os.path.join(BASE_DIR,'/static/')
+MEDIA_URL = 'media/'
+# STATIC_ROOT = os.path.join(BASE_DIR,'/static/')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
@@ -119,8 +141,19 @@ LOGOUT_REDIRECT_URL = 'login'  # Переход после выхода
 
 
 PASSWORD_HASHERS = [
-    'django.contrib.auth.hashers.PBKDF2PasswordHasher',
+    'django.contrib.auth.hashers.MD5PasswordHasher',
     ]
+
 
 FILE_CHARSET = 'utf-8'
 DEFAULT_CHARSET = 'utf-8'
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True  # Не SSL!
+EMAIL_HOST_USER = 'goalvoyager@gmail.com'  # Ваш полный email
+EMAIL_HOST_PASSWORD = 'rsye uzvc mfna lfmz'  # 'jorn upfh zyvv uwfe' Пароль приложения
+DEFAULT_FROM_EMAIL = 'goalvoyager@gmail.com'
+
+

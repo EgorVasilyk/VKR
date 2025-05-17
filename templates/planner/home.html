@@ -46,16 +46,16 @@
                         <span>{{ goal.end_date|date:"d.m.Y" }}</span>
                     </div>
                     <div class="goal-items">
-                        {% for item in goal.goalitems_set.all %}
-                        <div class="goal-item">
-                            {{ item.title }}
-                            <span class="item-status
-                                {% if item.status.name == 'В процессе' %}status-in-progress
-                                {% elif item.status.name == 'Выполнено' %}status-completed
-                                {% elif item.status.name == 'Просрочено' %}status-overdue{% endif %}">
-                                ({{ item.status.name }})
-                            </span>
-                        </div>
+                        {% for item in goal.active_items %}
+                            <div class="goal-item">
+                                {{ item.title }}
+                                <span class="item-status
+                                    {% if item.status.name == 'В процессе' %}status-in-progress
+                                    {% elif item.status.name == 'Выполнено' %}status-completed
+                                    {% elif item.status.name == 'Просрочено' %}status-overdue{% endif %}">
+                                    ({{ item.status.name }})
+                                </span>
+                            </div>
                         {% empty %}
                         <div class="goal-item">Нет пунктов</div>
                         {% endfor %}

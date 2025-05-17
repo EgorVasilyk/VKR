@@ -20,5 +20,9 @@ urlpatterns = [
     path('goals/<str:date_str>/', views.day_goals, name='day_goals'),
     path('admin/planner/goals/<int:pk>/recover/', views.recover_goal, name='planner_goals_recover'),
     path('reschedule-goal/', views.reschedule_goal, name='reschedule_goal'),
-
+    path('verify-email/', views.verify_email, name='verify_email'),
+    path('resend-code/', views.resend_verification_code, name='resend_verification_code'),
+    path('profile/verify-email-change/', views.verify_email_change, name='verify_email_change'),
+    path('profile/resend-email-change-code/', views.resend_email_change_code, name='resend_email_change_code'),
+    path('profile/notifications/', views.notification_settings, name='notification_settings'),
 ]

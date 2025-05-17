@@ -40,14 +40,25 @@ class IsDeletedFilter(admin.SimpleListFilter):
 
 @admin.register(Users, site=custom_admin_site)
 class AdminUsers(UserAdmin):
-    list_display = ('username', 'role', 'is_staff')
-    list_filter = ('role',)
+    list_display = ('username', 'role', 'is_staff', 'is_deleted')
+    list_filter = ('role', 'is_deleted')
     fieldsets = (
         (None, {'fields': ('username', 'password')}),
         ('Permissions', {'fields': ('is_staff', 'role')}),
     )
     search_fields = ('username',)
     ordering = ('username',)
+    actions = ['logical_delete', 'restore']
+
+    def logical_delete(self, request, queryset):
+        queryset.update(is_deleted=True)
+        self.message_user(request, "Выбранные статусы помечены как удаленные")
+    logical_delete.short_description = "Логически удалить"
+
+    def restore(self, request, queryset):
+        queryset.update(is_deleted=False)
+        self.message_user(request, "Выбранные статусы восстановлены")
+    restore.short_description = "Восстановить"
 
     def save_model(self, request, obj, form, change):
         if 'password' in form.changed_data:
@@ -129,7 +140,18 @@ admin.site.register(Goals, AdminGoals)
 @admin.register(GoalItems, site=custom_admin_site)
 class AdminGoalItems(admin.ModelAdmin):
     list_display = ('goal', 'title', 'status', 'is_deleted')
-    list_filter = (IsDeletedFilter,)
+    list_filter = ('is_deleted',)
+    actions = ['logical_delete', 'restore']
+
+    def logical_delete(self, request, queryset):
+        queryset.update(is_deleted=True)
+        self.message_user(request, "Выбранные пункты цели помечены как удаленные")
+    logical_delete.short_description = "Логически удалить"
+
+    def restore(self, request, queryset):
+        queryset.update(is_deleted=False)
+        self.message_user(request, "Выбранные пункты цели восстановлены")
+    restore.short_description = "Восстановить"
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
@@ -140,14 +162,36 @@ class AdminGoalItems(admin.ModelAdmin):
 
 @admin.register(Roles, site=custom_admin_site)
 class AdminRoles(admin.ModelAdmin):
-    list_display = ('name',)
-    search_fields = ('name',)
+    list_display = ('name', 'is_deleted')
+    list_filter = ('is_deleted',)
+    actions = ['logical_delete', 'restore']
+
+    def logical_delete(self, request, queryset):
+        queryset.update(is_deleted=True)
+        self.message_user(request, "Выбранные роли помечены как удаленные")
+    logical_delete.short_description = "Логически удалить"
+
+    def restore(self, request, queryset):
+        queryset.update(is_deleted=False)
+        self.message_user(request, "Выбранные роли восстановлены")
+    restore.short_description = "Восстановить"
 
 
 @admin.register(Statuses, site=custom_admin_site)
 class AdminStatuses(admin.ModelAdmin):
-    list_display = ('name',)
-    search_fields = ('name',)
+    list_display = ('name', 'is_deleted')
+    list_filter = ('is_deleted',)
+    actions = ['logical_delete', 'restore']
+
+    def logical_delete(self, request, queryset):
+        queryset.update(is_deleted=True)
+        self.message_user(request, "Выбранные статусы помечены как удаленные")
+    logical_delete.short_description = "Логически удалить"
+
+    def restore(self, request, queryset):
+        queryset.update(is_deleted=False)
+        self.message_user(request, "Выбранные статусы восстановлены")
+    restore.short_description = "Восстановить"
 
 
 # Переопределяем стандартную админку

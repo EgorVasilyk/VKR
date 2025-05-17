@@ -68,6 +68,17 @@
         <button type="submit" name="password_submit" class="btn">Изменить пароль</button>
     </form>
 
+        <h3 class="form-auth-subtitle">Изменение email</h3>
+    <form method="post">
+        {% csrf_token %}
+        {{ email_change_form.new_email.label_tag }}
+        {{ email_change_form.new_email }}
+        {% if email_change_form.new_email.errors %}
+            <div class="error">{{ email_change_form.new_email.errors }}</div>
+        {% endif %}
+        <button type="submit" name="email_submit" class="btn">Изменить email</button>
+    </form>
+
     <div class="form-auth-footer">
         <a href="{% url 'profile' %}" class="form-auth-link">Назад в профиль</a>
     </div>
